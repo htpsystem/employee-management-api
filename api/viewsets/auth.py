@@ -1,17 +1,24 @@
-# api/views.py
-
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from employee_management.settings import AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_AUTHORITY, AZURE_REDIRECT_URI
+from employee_management.settings import AZURE_CLIENT_ID, AZURE_CLIENT_SECRET, AZURE_AUTHORITY, AZURE_REDIRECT_URI
 from django.shortcuts import redirect
 from django.contrib.auth import login as django_login
 from django.contrib.auth import get_user_model
+from django.contrib.auth import logout
+from rest_framework.status import HTTP_200_OK, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND, HTTP_500_INTERNAL_SERVER_ERROR
+from rest_framework.permissions import AllowAny, IsAuthenticated
 import msal
 
 User = get_user_model()
 
 class AuthViewSet(ViewSet):
+
+    def get_permissions(self):
+        if self.action in ['login', 'callback']:
+            return [AllowAny()]
+        return [IsAuthenticated()]
+    
     def get_msal_app(self):
         return msal.ConfidentialClientApplication(
             client_id=AZURE_CLIENT_ID,
@@ -27,6 +34,11 @@ class AuthViewSet(ViewSet):
             redirect_uri=AZURE_REDIRECT_URI
         )
         return redirect(auth_url)
+    
+    @action(detail=False, methods=["get"])
+    def logout(self, request):
+        logout(request)
+        return Response({"message": "Logged out successfully."}, status=HTTP_200_OK)
 
     @action(detail=False, methods=["get"])
     def callback(self, request):
@@ -42,14 +54,10 @@ class AuthViewSet(ViewSet):
             if "id_token_claims" in result:
                 email = result["id_token_claims"].get("preferred_username")
                 user = User.objects.get(email=email)
-                if not user:
-                    return Response({"error": "User not found"}, status=404)
-                print(user)
                 django_login(request, user)
                 return Response(user.get_employee_details())
-            # print(result)
-            return Response(result, status=401)
+            return Response(result, status=HTTP_401_UNAUTHORIZED)
         except User.DoesNotExist:
-            return Response({"error": f"User '{email}'  does not exist"}, status=404)
+            return Response({"error": f"User '{email}'  does not exist"}, status=HTTP_404_NOT_FOUND)
         except Exception as e:
-            return Response({"error": str(e)}, status=500)
+            return Response({"error": str(e)}, status=HTTP_500_INTERNAL_SERVER_ERROR)

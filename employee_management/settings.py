@@ -143,3 +143,11 @@ AZURE_TENANT_ID = config('AZURE_TENANT_ID')
 AZURE_REDIRECT_URI = config('AZURE_REDIRECT_URI')
 AZURE_AUTHORITY = f"https://login.microsoftonline.com/{AZURE_TENANT_ID}"
 
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+}
