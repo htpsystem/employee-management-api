@@ -21,6 +21,10 @@ class Employee(AbstractBaseUser, PermissionsMixin):
     dob = models.DateField()
     mobile = models.CharField(max_length=15)
     email = models.EmailField(unique=True)
+    other_email = models.EmailField(unique=True)
+    gender = models.CharField(max_length=1, choices=[('M', 'Male'), ('F', 'Female'), ('O', 'Other')])
+    marital_status = models.CharField(max_length=1, choices=[('M', 'Married'), ('U', 'Un-Married'), ('W', 'Widow/Widower'), ('D', 'Divorced')])
+    qualification = models.CharField(max_length=3, choices=[('IL', 'Illiterate'), ('NMT', 'Non-Matric'), ('MT', 'Matric'), ('SSC', 'Senior-Secondary'), ('UG', 'Graduate/Undergraduate'), ('PG', 'Postgraduate'), ('DOC', 'Doctorate'), ('TEC', 'Technical (Professional)')])
     aadhar = models.CharField(max_length=12, unique=True)
     pan = models.CharField(max_length=10, unique=True)
     role = models.CharField(max_length=100)
@@ -78,7 +82,7 @@ class Employee(AbstractBaseUser, PermissionsMixin):
         return f"{self.mobile[:3]}-{self.mobile[3:6]}-{self.mobile[6:]}"
     
     def get_email_domain(self):
-        return self.email.split('@')[1] if '@' in self.email else None  
+        return self.email.split('@')[1] if '@' in self.email else None
     
     def get_aadhar_last_four(self):
         return self.aadhar[-4:] if len(self.aadhar) >= 4 else self.aadhar
@@ -104,6 +108,10 @@ class Employee(AbstractBaseUser, PermissionsMixin):
             "dob": self.dob.strftime("%d-%m-%Y"),
             "mobile": self.get_mobile(),
             "email": self.email,
+            "other_email": self.other_email,
+            "qualification": self.qualification,
+            "marital_status": self.marital_status,
+            "gender": self.gender,
             "aadhar": f"****{self.get_aadhar_last_four()}",
             "pan": f"{self.get_pan_first_three()}***{self.get_pan_last_three()}",
             "role": self.role,

@@ -31,7 +31,8 @@ class AuthViewSet(ViewSet):
         msal_app = self.get_msal_app()
         auth_url = msal_app.get_authorization_request_url(
             scopes=[],
-            redirect_uri=AZURE_REDIRECT_URI
+            redirect_uri=AZURE_REDIRECT_URI,
+            prompt="select_account",
         )
         return redirect(auth_url)
     
